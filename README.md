@@ -11,10 +11,6 @@ This is a minimal, hacking-themed Internet speed test tool with a retro "Matrix-
 - 📱 Mobile-friendly UI
 - 💡 No external libraries required
 
-## 📸 Screenshot
-
-![screenshot](screenshot.jpg)
-
 ## 🛠️ How to Use
 
 1. Clone or download the repository.
