@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Speed Test - Matrix Style</title>
+  <style>
+    :root {
+      --bg-dark: black;
+      --text-dark: #00ff00;
+      --bg-light: #f0f0f0;
+      --text-light: #111;
+      --accent: #00ff00;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      font-family: monospace;
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    canvas#matrix {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+
+    .light-mode canvas#matrix {
+      display: none;
+    }
+
+    .terminal-box {
+      position: relative;
+      border: 2px solid var(--accent);
+      padding: 1.5em;
+      max-width: 700px;
+      margin: 3em auto;
+      background: rgba(0, 0, 0, 0.85);
+      border-radius: 10px;
+      z-index: 1;
+      color: var(--text-dark);
+    }
+
+    .light-mode {
+      background-color: var(--bg-light);
+      color: var(--text-light);
+    }
+
+    .light-mode .terminal-box {
+      background: white;
+      border-color: var(--text-light);
+      color: var(--text-light);
+    }
+
+    h2 {
+      font-size: 1.5em;
+      margin-top: 0;
+      word-wrap: break-word;
+    }
+
+    button {
+      background: none;
+      color: inherit;
+      border: 1px solid currentColor;
+      padding: 0.5em 1em;
+      font-size: 1em;
+      cursor: pointer;
+      margin: 0.5em 0.5em 0 0;
+      border-radius: 5px;
+    }
+
+    .light-mode button {
+      color: var(--text-light);
+      border-color: var(--text-light);
+    }
+
+    #output {
+      margin-top: 1.5em;
+      font-size: 1em;
+      word-wrap: break-word;
+    }
+
+    .blink {
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    strong {
+      color: var(--accent);
+    }
+
+    .light-mode strong {
+      color: #006600;
+    }
+
+    @media (max-width: 600px) {
+      .terminal-box {
+        padding: 1em;
+        font-size: 0.95em;
+        margin: 1em;
+      }
+
+      h2 {
+        font-size: 1.2em;
+      }
+
+      button {
+        width: 100%;
+        margin-bottom: 0.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="terminal-box">
+    <h2>💻 Internet Speed Test [Matrix Style]</h2>
+    <button onclick="runAllTests()">▶ Run All Tests</button>
+    <button onclick="toggleTheme()">🌓 Toggle Dark/Light Mode</button>
+    <div id="output">Waiting for command...</div>
+  </div>
+
+  <script>
+    // MATRIX BACKGROUND
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+
+    function initMatrix() {
+      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+
+      const letters = "01";
+      const fontSize = 14;
+      const columns = canvas.width / fontSize;
+      const drops = Array(Math.floor(columns)).fill(1);
+
+      function draw() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#0F0";
+        ctx.font = fontSize + "px monospace";
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = letters[Math.floor(Math.random() * letters.length)];
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+          if (drops[i] * fontSize > canvas.height || Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+
+      setInterval(draw, 33);
+    }
+
+    if (!document.body.classList.contains("light-mode")) {
+      initMatrix();
+    }
+
+    window.addEventListener("resize", () => {
+      if (!document.body.classList.contains("light-mode")) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    });
+
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+
+      // Restart matrix if toggling back to dark
+      if (!document.body.classList.contains("light-mode")) {
+        initMatrix();
+      } else {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // SPEED TEST FUNCTIONS
+    async function runAllTests() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<span class="blink">Running tests...</span>';
+
+      const results = [];
+
+      const pingRes = await pingTest();
+      results.push(pingRes);
+
+      const downloadRes = await downloadTest();
+      results.push(downloadRes);
+
+      const uploadRes = await uploadTest();
+      results.push(uploadRes);
+
+      output.innerHTML = results.join("<br><br>");
+    }
+
+    async function downloadTest() {
+      const url = "https://speed.cloudflare.com/__down?bytes=10000000"; // 10MB
+      const start = performance.now();
+
+      try {
+        const response = await fetch(url, { cache: 'no-store' });
+        const reader = response.body.getReader();
+        let received = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          received += value.length;
+        }
+
+        const end = performance.now();
+        const seconds = (end - start) / 1000;
+        const speedMbps = ((received * 8) / seconds / 1024 / 1024).toFixed(2);
+
+        return `📥 Download Speed: <strong>${speedMbps} Mbps</strong> (in ${seconds.toFixed(2)}s)`;
+      } catch (e) {
+        return `❌ Download Test Failed: ${e.message}`;
+      }
+    }
+
+    async function uploadTest() {
+      const url = "https://httpbin.org/post";
+      const data = new Uint8Array(5 * 1024 * 1024); // 5MB blob
+      const start = performance.now();
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          body: data,
+          headers: { "Content-Type": "application/octet-stream" }
+        });
+
+        const end = performance.now();
+        const seconds = (end - start) / 1000;
+        const speedMbps = ((data.length * 8) / seconds / 1024 / 1024).toFixed(2);
+
+        return `📤 Upload Speed: <strong>${speedMbps} Mbps</strong> (in ${seconds.toFixed(2)}s)`;
+      } catch (e) {
+        return `❌ Upload Test Failed: ${e.message}`;
+      }
+    }
+
+    async function pingTest() {
+      const url = "https://www.cloudflare.com/cdn-cgi/trace";
+      const pings = [];
+
+      for (let i = 0; i < 5; i++) {
+        const start = performance.now();
+        try {
+          await fetch(url, { cache: 'no-store' });
+          const end = performance.now();
+          pings.push(end - start);
+        } catch {
+          pings.push(null);
+        }
+      }
+
+      const validPings = pings.filter(p => p !== null);
+      if (validPings.length === 0) return "❌ Ping Test Failed";
+
+      const avg = validPings.reduce((a, b) => a + b, 0) / validPings.length;
+      const jitter = Math.max(...validPings) - Math.min(...validPings);
+
+      return `📡 Ping: <strong>${avg.toFixed(1)} ms</strong><br>📶 Jitter: <strong>${jitter.toFixed(1)} ms</strong>`;
+    }
+  </script>
+</body>
+</html>
