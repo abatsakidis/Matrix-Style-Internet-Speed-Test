@@ -13,7 +13,7 @@ This is a minimal, hacking-themed Internet speed test tool with a retro "Matrix-
 
 ## 📸 Screenshot
 
-![screenshot](screenshot.png)
+![screenshot](screenshot.jpg)
 
 ## 🛠️ How to Use
 
