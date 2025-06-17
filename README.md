@@ -38,6 +38,10 @@ This is a minimal, hacking-themed Internet speed test tool with a retro "Matrix-
 - **Ping test** performs multiple fetches to measure average latency and jitter.
 - The matrix animation is implemented with a `<canvas>` overlay.
 
+## Screenshot
+
+![App Screenshot](screenshot/screen.jpg)
+
 ## ⚠️ Limitations
 
 - Upload and download speeds may vary depending on CORS and network limitations.
